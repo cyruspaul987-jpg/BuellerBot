@@ -1,6 +1,8 @@
 import sounddevice as sd
 import wavio as wv
 import datetime
+import platform
+import config
 
 def get_device_id_by_name(name):
     devices = sd.query_devices()
@@ -10,13 +12,24 @@ def get_device_id_by_name(name):
     return None
 
 freq = 44100
-duration = 5 # in seconds
+duration = 5  # in seconds
 print('Started Recording')
 
-device_id = get_device_id_by_name("Blackhole 2ch") #if you download another blackhole version, update this to its name
+# Determine the audio device to use. A custom device name can be supplied via
+# the ``AUDIO_DEVICE_NAME`` environment variable. If not provided, choose a
+# sensible default based on the platform.
+device_name = config.AUDIO_DEVICE_NAME
+if not device_name:
+    if platform.system() == "Darwin":
+        device_name = "Blackhole 2ch"
+    elif platform.system() == "Windows":
+        device_name = "CABLE Output"
+
+device_id = get_device_id_by_name(device_name) if device_name else None
 
 if device_id is None:
-    print('Blackhole device not found')
+    available = ", ".join([d['name'] for d in sd.query_devices()])
+    print(f"Audio device '{device_name}' not found. Available devices: {available}")
     exit(1)
 
 while True:
@@ -30,3 +43,4 @@ while True:
 
     # Convert the NumPy array to audio file
     wv.write(f"./recordings/{filename}.wav", recording, freq, sampwidth=2)
+

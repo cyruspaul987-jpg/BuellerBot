@@ -18,23 +18,46 @@ https://github.com/EdwardIPAguilar/BuellerBot/assets/59296703/7bc4bfa1-8104-4ffb
 Python >=3.8.0
 An OpenAI API key that can access OpenAI API (set up a paid account OpenAI account)
 An ElevenLabs API key that can access the EL API (set up a paid account EL account)
-Mac OS (Not yet tested on others!)
+macOS or Windows (audio routing setup required)
 
-### Setting Up Blackhole For Source Audio Intake
-One of the cool things about BuellerBot is that it can take in source audio, that way you don't need to worry about audio feedback during meetings. It can do this by using the blackhole download, which you can get here for free: https://existential.audio/blackhole/
+### Setting Up Audio Routing
+BuellerBot captures system audio through a virtual audio device so it can listen in without creating feedback.
 
-  - Once you've downloaded blackhole (make sure it's the 2ch version), you'll need to setup a MIDI multi-output device. This is super easy on MacOS.
+#### macOS: Blackhole
+You can get Blackhole for free at https://existential.audio/blackhole/
 
-  - All you've got to do is open the 'Audio MIDI setup' app, click on the plus button on the bottom right-hand corner, click multi-output-device, and then be sure to select blackhole + any other devices you want your audio output to route to. Viola, audio device created!
+  - Once you've downloaded Blackhole (make sure it's the 2ch version), you'll need to setup a MIDI multi-output device. This is super easy on macOS.
+  - Open the **Audio MIDI setup** app, click the plus button at the bottom right, select **Multi-output-device**, and choose Blackhole along with any other devices you want your audio output to route to. Viola, audio device created!
+  - To make sure audio is routed through Blackhole as well as your other output devices, right click the newly created output device on the left-side menu and select **use this device for sound output**.
+  - Sometimes you might not see anything showing up when transcribing; the most likely cause is that you haven't selected **use this device for sound output**. This resets every now and again if you're frequently connecting and disconnecting the output devices it relies on.
 
-  - Now, to make sure that audio is actually getting passed through to blackhole as well as your other output devices, be sure to right click on the newly created output device on the menu on the left-side and select 'use this device for sound output'
+#### Windows: VB-Audio Virtual Cable
+Install the free VB-Audio Virtual Cable from https://vb-audio.com/Cable/
 
-  - Sometimes, you might not see anything showing up when transcribing, the most likely cause is that you haven't selected 'use this device for sound output'. This resets every now and again if you're frequently connecting and disconnecting the output devices it relies on. 
+  - After installation, open the Windows **Sound** settings and set **CABLE Output** as the default playback device.
+  - If you name the device differently, set `AUDIO_DEVICE_NAME` in your `.env` file to match so `recorder.py` can find it.
 
-P.S. Input is typically handled within the platform you're using. 
+P.S. Input is typically handled within the platform you're using.
 
 ### Connecting BuellerBot To Your ElevenLabs + OpenAI Account
-All you've got to do here is create your .env file, and set EL_API_KEY and OPEN_AI_KEY to = your api keys :)
+Create a `.env` file and set `EL_API_KEY` and `OPEN_AI_KEY` to your API keys.
+Optionally set `AUDIO_DEVICE_NAME` to override the audio device that `recorder.py`
+should use (e.g., `AUDIO_DEVICE_NAME="CABLE Output"` on Windows if you rename the VB-Audio device).
+
+### Enabling SMS Check-In (Optional)
+If you'd like BuellerBot to text you a code whenever the teacher says "check in," add your Twilio credentials to `.env`:
+
+```
+TWILIO_ACCOUNT_SID=your-twilio-account-sid
+TWILIO_AUTH_TOKEN=your-twilio-auth-token
+TWILIO_FROM_PHONE=+15551234567      # Twilio phone number
+TWILIO_TO_PHONE=+15557654321        # Your phone number
+```
+
+When "check in" is detected in the live transcript, BuellerBot will generate a random 6‑digit code and send it to `TWILIO_TO_PHONE` via SMS.
+
+### Running on GitHub Actions
+A minimal workflow is provided in `.github/workflows/python.yml` that installs dependencies and runs a syntax check on the source files. To use it, add your `EL_API_KEY` and `OPEN_AI_KEY` as repository secrets so the code can authenticate with OpenAI and ElevenLabs when needed.
 
 ## Contributing
 

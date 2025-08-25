@@ -15,6 +15,9 @@ import pyautogui as pag
 import ssl
 from threading import Thread
 from dotenv import load_dotenv
+from twilio.rest import Client
+import random
+import re
 
 #Common transcription variations of your name. Case sensitive.
 keywordOne = 'edward'
@@ -59,6 +62,20 @@ def playsound_and_update(path_to_sound):
     playsound(path_to_sound)
     global is_bot_speaking
     is_bot_speaking = False
+
+
+def send_checkin_code():
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    from_phone = os.getenv("TWILIO_FROM_PHONE")
+    to_phone = os.getenv("TWILIO_TO_PHONE")
+    if not all([account_sid, auth_token, from_phone, to_phone]):
+        print("Twilio credentials are not fully configured.")
+        return
+    code = str(random.randint(100000, 999999))
+    client = Client(account_sid, auth_token)
+    client.messages.create(body=f"Check-in code: {code}", from_=from_phone, to=to_phone)
+    print(f"Sent check-in code {code} to {to_phone}")
 
 def trigger_robot(brain_needed, status_queue, is_terminate, autovoice, buyingtime):
     def run():
@@ -199,6 +216,11 @@ def start_transcription(status_queue, is_terminate, autovoice, buyingtime):
                     if is_terminate.value:
                         print("terminate hit, break function")
                         break
+                    if re.search(r'\bcheck in\b', brain_needed, re.IGNORECASE):
+                        send_checkin_code()
+                        brain_needed = re.sub(r'\bcheck in\b', '', brain_needed, flags=re.IGNORECASE)
+                        with open("transcriptions/transcript.txt", "w") as fw:
+                            fw.write(brain_needed)
                     if keywordOne in brain_needed or keywordTwo in brain_needed or keywordThree in brain_needed:
                         print('trigger word noted, waiting 1 second for additional context')
                         with open('misc/triggered.txt', 'w') as file:

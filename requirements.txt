@@ -1,0 +1,8 @@
+openai
+openai-whisper
+pyautogui
+sounddevice
+wavio
+requests
+python-dotenv
+twilio
